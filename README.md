@@ -44,9 +44,9 @@ $$q_\theta(z \mid x) = \mathcal{N}\left(z; \mu_\theta(x), \Sigma_\theta(x)\right
   2. Lower-triangular entries: $l(x) \in \mathbb{R}^{\frac{d(d+1)}{2}}$
 - **Ensuring Positive Definiteness**:
   The diagonal entries are passed through the exponential function:
-  \[
-    L_{ii} = \exp(\tilde{l}_{ii})
-  \]
+  
+  $$  L_{ii} = \exp(\tilde{l}_{ii}) $$
+
   which guarantees $L_{ii} > 0$, ensuring $\Sigma_\theta(x)$ is invertible and strictly positive definite.
 
 ---
@@ -72,9 +72,8 @@ Under the isotropic Gaussian likelihood $p_\phi(x \mid z) = \mathcal{N}(x; \mu_\
 $$-\log p_\phi(x \mid z) = \frac{D}{2}\log(2\pi) + D\log(\sigma) + \frac{1}{2\sigma^2} \|x - \mu_\phi(z)\|^2$$
 
 Dropping constant terms with respect to network parameters $\theta$ and $\phi$, the per-sample reconstruction error corresponds to the scaled squared Euclidean distance:
-\[
-  \mathcal{L}_{\text{recon}}(x, \mu_\phi(z)) = \frac{1}{2\sigma^2} \sum_{k=1}^D (x_k - \mu_{\phi, k}(z))^2
-\]
+
+$$  \mathcal{L}_{\text{recon}}(x, \mu_\phi(z)) = \frac{1}{2\sigma^2} \sum_{k=1}^D (x_k - \mu_{\phi, k}(z))^2$$
 
 ---
 
