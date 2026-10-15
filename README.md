@@ -44,8 +44,7 @@ $$q_\theta(z \mid x) = \mathcal{N}\left(z; \mu_\theta(x), \Sigma_\theta(x)\right
   2. Lower-triangular entries: $l(x) \in \mathbb{R}^{\frac{d(d+1)}{2}}$
 - **Ensuring Positive Definiteness**:
   The diagonal entries are passed through the exponential function:
-  $$L_{ii} = \exp(\tilde{l}_{ii})$$
-
+  $$L_{ii} = \exp(l_{ii})$$
   which guarantees $L_{ii} > 0$, ensuring $\Sigma_\theta(x)$ is invertible and strictly positive definite.
 
 ---
@@ -79,17 +78,18 @@ $$  \mathcal{L}_{\text{recon}}(x, \mu_\phi(z)) = \frac{1}{2\sigma^2} \sum_{k=1}^
 ### 2.2 Analytical Kullback-Leibler Divergence
 For two multivariate Gaussians $q(z) = \mathcal{N}(\mu, \Sigma)$ and $p(z) = \mathcal{N}(\mathbf{0}, \mathbf{I}_d)$, the KL divergence has the closed form:
 
-$$D_{\text{KL}}\left(q(z \mid x) \,\parallel\, p(z)\right) = \frac{1}{2} \left[ \text{Tr}(\Sigma) + \|\mu\|^2 - d - \log \det(\Sigma) \right]$$
+$$D_{\text{KL}}\left(q(z) \,\parallel\, p(z)\right) = \frac{1}{2} \left[ \text{Tr}(\Sigma) + \|\mu\|^2 - d - \log \det(\Sigma) \right]$$
 
 Exploiting the Cholesky factor $\Sigma = L L^T$:
 1. **Trace Term**:
-   $$\text{Tr}(\Sigma) = \text{Tr}(L L^T) = \sum_{i=1}^d \sum_{k=1}^i L_{ik}^2 = \|L\|_F^2$$
+   $$\text{Tr}(\Sigma) = \text{Tr}(L L^T) = \sum\limits_{i=1}^d \sum\limits_{k=1}^i L_{ik}^2 = \|L\|_F^2$$
 2. **Log-Determinant Term**:
-   $$\det(\Sigma) = \det(L L^T) = (\det(L))^2 = \left(\prod_{i=1}^d L_{ii}\right)^2$$
+   $$\det(\Sigma) = \det(L L^T) = (\det(L))^2 = \left(\prod\limits_{i=1}^d L_{ii}\right)^2$$
+
    $$\log \det(\Sigma) = 2 \sum_{i=1}^d \log L_{ii}$$
 
 Substituting both into the KL formula gives:
-$$D_{\text{KL}} = \frac{1}{2} \left[ \sum\limits_{i=1}^d \sum_{k=1}^i L_{ik}^2 + \sum\limits_{j=1}^d \mu_j^2 - d - 2 \sum\limits_{i=1}^d \log L_{ii} \right]$$
+$$D_{\text{KL}} = \frac{1}{2} \left[ \sum\limits_{i=1}^d \sum\limits_{k=1}^i L_{ik}^2 + \sum\limits_{j=1}^d \mu_j^2 - d - 2 \sum\limits_{i=1}^d \log (L_{ii}) \right]$$
 
 ---
 
