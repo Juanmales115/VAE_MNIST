@@ -44,8 +44,7 @@ $$q_\theta(z \mid x) = \mathcal{N}\left(z; \mu_\theta(x), \Sigma_\theta(x)\right
   2. Lower-triangular entries: $l(x) \in \mathbb{R}^{\frac{d(d+1)}{2}}$
 - **Ensuring Positive Definiteness**:
   The diagonal entries are passed through the exponential function:
-  
-  $$  L_{ii} = \exp(\tilde{l}_{ii}) $$
+  $$L_{ii} = \exp(\tilde{l}_{ii})$$
 
   which guarantees $L_{ii} > 0$, ensuring $\Sigma_\theta(x)$ is invertible and strictly positive definite.
 
