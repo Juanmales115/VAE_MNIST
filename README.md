@@ -24,7 +24,7 @@ A Variational Autoencoder defines a directed latent-variable generative model:
 
 ### 1.1 Prior Distribution over Latent Variables
 The latent representations $z \in \mathbb{R}^d$ are assumed to follow a standard multivariate normal distribution:
-$$p(z) = \mathcal{N}\left(z; \mathbf{0}, \mathbf{I}_d\right)$$
+$$p(z) = \mathcal{N}\left(z; \mathbf{0}, \mathbf{I}\right)$$
 - **Assumption**: Prior latent dimensions are mutually independent, centered at zero with unit variance.
 
 ---
@@ -44,7 +44,9 @@ $$q_\theta(z \mid x) = \mathcal{N}\left(z; \mu_\theta(x), \Sigma_\theta(x)\right
   2. Lower-triangular entries: $l(x) \in \mathbb{R}^{\frac{d(d+1)}{2}}$
 - **Ensuring Positive Definiteness**:
   The diagonal entries are passed through the exponential function:
-  $$L_{ii} = \exp(\tilde{l}_{ii})$$
+  \[
+    L_{ii} = \exp(\tilde{l}_{ii})
+  \]
   which guarantees $L_{ii} > 0$, ensuring $\Sigma_\theta(x)$ is invertible and strictly positive definite.
 
 ---
@@ -70,30 +72,34 @@ Under the isotropic Gaussian likelihood $p_\phi(x \mid z) = \mathcal{N}(x; \mu_\
 $$-\log p_\phi(x \mid z) = \frac{D}{2}\log(2\pi) + D\log(\sigma) + \frac{1}{2\sigma^2} \|x - \mu_\phi(z)\|^2$$
 
 Dropping constant terms with respect to network parameters $\theta$ and $\phi$, the per-sample reconstruction error corresponds to the scaled squared Euclidean distance:
-$$\mathcal{L}_{\text{recon}}(x, \mu_\phi(z)) = \frac{1}{2\sigma^2} \sum_{k=1}^D (x_k - \mu_{\phi, k}(z))^2$$
+\[
+  \mathcal{L}_{\text{recon}}(x, \mu_\phi(z)) = \frac{1}{2\sigma^2} \sum_{k=1}^D (x_k - \mu_{\phi, k}(z))^2
+\]
 
 ---
 
 ### 2.2 Analytical Kullback-Leibler Divergence
 For two multivariate Gaussians $q(z) = \mathcal{N}(\mu, \Sigma)$ and $p(z) = \mathcal{N}(\mathbf{0}, \mathbf{I}_d)$, the KL divergence has the closed form:
 
-$$D_{\text{KL}}\left(q(z \mid x) \,\parallel\, p(z)\right) = \frac{1}{2} \left[ \operatorname{Tr}(\Sigma) + \|\mu\|^2 - d - \log \det(\Sigma) \right]$$
+$$D_{\text{KL}}\left(q(z \mid x) \,\parallel\, p(z)\right) = \frac{1}{2} \left[ \text{Tr}(\Sigma) + \|\mu\|^2 - d - \log \det(\Sigma) \right]$$
 
 Exploiting the Cholesky factor $\Sigma = L L^T$:
 1. **Trace Term**:
-   $$\operatorname{Tr}(\Sigma) = \operatorname{Tr}(L L^T) = \sum_{i=1}^d \sum_{k=1}^i L_{ik}^2 = \|L\|_F^2$$
+   $$\text{Tr}(\Sigma) = \text{Tr}(L L^T) = \sum_{i=1}^d \sum_{k=1}^i L_{ik}^2 = \|L\|_F^2$$
 2. **Log-Determinant Term**:
    $$\det(\Sigma) = \det(L L^T) = (\det(L))^2 = \left(\prod_{i=1}^d L_{ii}\right)^2$$
    $$\log \det(\Sigma) = 2 \sum_{i=1}^d \log L_{ii}$$
 
 Substituting both into the KL formula gives:
-$$D_{\text{KL}} = \frac{1}{2} \left[ \sum_{i=1}^d \sum_{k=1}^i L_{ik}^2 + \sum_{j=1}^d \mu_j^2 - d - 2 \sum_{i=1}^d \log L_{ii} \right]$$
+$$D_{\text{KL}} = \frac{1}{2} \left[ \sum\limits_{i=1}^d \sum_{k=1}^i L_{ik}^2 + \sum\limits_{j=1}^d \mu_j^2 - d - 2 \sum\limits_{i=1}^d \log L_{ii} \right]$$
 
 ---
 
 ### 2.3 Multivariate Reparameterization Trick
 To propagate gradients through latent sampling, the stochasticity is isolated into an auxiliary standard normal variable:
+
 $$\epsilon \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_d)$$
+
 $$z = \mu_\theta(x) + L(x) \epsilon$$
 
 Since $L(x) \epsilon \sim \mathcal{N}(\mathbf{0}, L L^T) = \mathcal{N}(\mathbf{0}, \Sigma_\theta(x))$, $z$ is distributed exactly according to $q_\theta(z \mid x)$.
@@ -123,7 +129,7 @@ Flatten ───────────────► Linear(784, 196) ──
                          /            \
                         /              \
                        ▼                ▼
-             Linear(49, d)       Linear(49, d*(d+1)/2)
+             Linear(49, 16)       Linear(49, 16*(16+1)/2)
                    │                      │
              Mean vector mu           L_vector
               [B, 16]                 [B, 136]
@@ -140,7 +146,7 @@ Flatten ───────────────► Linear(784, 196) ──
 ### 3.2 Cholesky Factor Assembly (`build_cholesky_factor`)
 1. Allocates a zeros tensor of shape `[B, 16, 16]`.
 2. Fills the lower-triangular entries using precomputed lower-triangular indices `torch.tril_indices(16, 16)`.
-3. Replaces the diagonal entries with $\exp(\operatorname{diag}(L))$ via `diagonal_scatter`.
+3. Replaces the diagonal entries with $\exp(\text{diag}(L))$ via `diagonal_scatter`.
 4. Returns the batch of lower-triangular matrices $L \in \mathbb{R}^{B \times 16 \times 16}$.
 
 ---
@@ -167,22 +173,6 @@ mu_z: [B, 784] ───► Reshape to [B, 1, 28, 28]
 - **Hidden Layer 1 (`lin1`)**: `nn.Linear(16, 49)` + `F.relu`
 - **Hidden Layer 2 (`lin2`)**: `nn.Linear(49, 196)` + `F.relu`
 - **Output Layer (`mu`)**: `nn.Linear(196, 784)` without activation, representing the Gaussian mean image $\mu_\phi(z)$.
-
----
-
-### 3.4 Tensor Dimensions Summary
-
-| Component | Tensor Name | Shape ($B=\text{batch size}, d=16$) | Description |
-|---|---|---|---|
-| Input Image | `x` | `[B, 1, 28, 28]` | Normalized input digits |
-| Flattened Input | `x_flat` | `[B, 784]` | Reshaped vector representation |
-| Latent Mean | `mu` | `[B, 16]` | Conditional mean $\mu_\theta(x)$ |
-| Cholesky Vector | `L_matrix` | `[B, 136]` | Vectorized lower-triangular entries |
-| Cholesky Factor | `chol` | `[B, 16, 16]` | Lower-triangular matrix $L(x)$ |
-| Random Noise | `eps` | `[B, 16]` | Isotropic noise $\epsilon \sim \mathcal{N}(0, I)$ |
-| Latent Sample | `z` | `[B, 16]` | $z = \mu + L \epsilon$ via batch matrix multiply |
-| Reconstruction Mean | `mu_z` | `[B, 784]` | Mean of likelihood distribution $\mu_\phi(z)$ |
-| Stochastic Reconstruction | `x_recon` | `[B, 1, 28, 28]` | $\mu_z + \sigma \cdot \epsilon_x$ |
 
 ---
 
